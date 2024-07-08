@@ -1,7 +1,8 @@
 import { createReducer, on } from '@ngrx/store';
-import {addMessage} from '../actions/messages.action';
+import { OpenAIResponse } from '../../model/message.interface';
+import { addMessageSuccess } from '../actions/messages.action';
 export interface MessageState {
-  messages: string[];
+  messages: OpenAIResponse[];
 }
 
 export const initialState: MessageState = {
@@ -10,9 +11,11 @@ export const initialState: MessageState = {
 
 export const messageReducer = createReducer(
   initialState,
-  on(addMessage, (state, { message }) => {
-    return {
-      messages: [...state.messages, message]
-    };
-  })
+  on(
+    addMessageSuccess,
+    (state, { response }) => ({
+      ...state,
+      messages: [...state.messages, response]
+    })
+  )
 );

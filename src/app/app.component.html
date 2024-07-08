@@ -4,9 +4,8 @@
       {{message}}
     </div>
   }
-     
   <footer>
-    <input type="text" placeholder="Enter your message"/>
-    <button (click)="addMessage('test')">Send</button>
+    <input #messageInput type="text" placeholder="Enter your message"/>
+    <button (click)="addMessage(messageInput.value)">Send</button>
   </footer>
 </section>
