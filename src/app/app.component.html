@@ -1,11 +1,15 @@
 <section class="full-height">
-  @for (message of messagesS(); track $index) {
-    <div>
-      {{message}}
-    </div>
-  }
+  <div class="messages-container">
+    @for (message of messagesS(); track $index) {
+      <div>
+        {{message}}
+      </div>
+    }
+  </div>  
   <footer>
-    <input #messageInput type="text" placeholder="Enter your message"/>
-    <button (click)="addMessage(messageInput.value)">Send</button>
+    <div class="action-container">
+      <input #messageInput type="text" placeholder="Enter your message"/>
+      <button (click)="addMessage(messageInput.value)">Send</button>
+    </div>    
   </footer>
 </section>

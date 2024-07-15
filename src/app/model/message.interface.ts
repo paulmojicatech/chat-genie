@@ -14,8 +14,10 @@ export interface OpenAIResponse {
  model: string;
  choices: {
   index: number;
-  role: string;
-  content: string;
+  message: {
+    content: string;
+    role: string;
+  },
   logprobs: string;
  }[]; 
  usage: OpenAIUsage;

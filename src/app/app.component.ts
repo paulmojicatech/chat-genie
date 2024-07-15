@@ -1,9 +1,9 @@
-import { Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { selectMessages } from './ngrx/selector/messages.selector';
-import { addMessage } from './ngrx/actions/messages.action';
 import { OpenAIHttpPostRequest } from './model/message.interface';
+import { addMessage } from './ngrx/actions/messages.action';
+import { selectMessages } from './ngrx/selector/messages.selector';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +15,15 @@ import { OpenAIHttpPostRequest } from './model/message.interface';
 export class AppComponent {
   private _store = inject(Store);
 
-  messagesS = this._store.selectSignal(selectMessages);
+  messagesS = computed(() => {
+    const messages = this._store.selectSignal(selectMessages)();
+    console.log(messages); 
+    return messages.map(message => {
+      return message.choices.map(choice => {
+        return choice.message.content;
+      })
+    }).flat();
+  })
 
   addMessage(message: string) {
 
