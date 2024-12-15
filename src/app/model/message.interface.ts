@@ -1,23 +1,32 @@
-export interface Message {
-  id: string;
-  object: string;
-  created: number;
+export interface OpenAIHttpPostRequest {
+  appId?: string;
   model: string;
-  choices: Choice[];
-  usage: Usage;
-  system_fingerprint: string;
-
+  messages: {
+    role: string;
+    content: string;
+  }[];
+  temperature: number;
 }
-export interface Choice {
+
+export interface OpenAIResponse {
+ appId?: string;
+ id?: string;
+ object?: string;
+ created?: Date;
+ model: string;
+ choices?: {
   index: number;
-  message: Message;
-  logprobs: null;
-  finish_reason: string;
+  message: {
+    content: string;
+    role: string;
+  },
+  logprobs?: string;
+ }[];
+ usage?: OpenAIUsage;
 }
 
-export interface Usage {
+export interface OpenAIUsage {
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
 }
-
