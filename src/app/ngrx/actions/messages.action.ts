@@ -15,3 +15,7 @@ export const openAIError = createAction(
   '[Messages] OpenAI Error',
   props<{ error: any }>()
 );
+
+export const resetMessages = createAction(
+  '[Messages] Reset Messages'
+);

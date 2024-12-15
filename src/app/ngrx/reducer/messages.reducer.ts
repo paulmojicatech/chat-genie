@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { OpenAIHttpPostRequest, OpenAIResponse } from '../../model/message.interface';
-import { addMessage, addMessageSuccess } from '../actions/messages.action';
+import { addMessage, addMessageSuccess, resetMessages } from '../actions/messages.action';
 export interface MessageState {
   request: OpenAIHttpPostRequest | undefined;
   messages: (OpenAIResponse & {isProcessing: boolean} )[];
@@ -52,6 +52,12 @@ export const messageReducer = createReducer(
         ...state,
         messages: updatedMessages
       };
+    }
+  ),
+  on(
+    resetMessages,
+    (state) => {
+      return initialState;
     }
   )
 );

@@ -4,7 +4,7 @@ import { OpenAiHttpService } from '../../services/open-ai-http.service';
 import { addMessage, addMessageSuccess, openAIError } from '../actions/messages.action';
 import { catchError, filter, map, switchMap, withLatestFrom } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { selectMessages, selectMessageState } from '../selector/messages.selector';
+import { selectMessages } from '../selector/messages.selector';
 import { OpenAIResponse } from '../../model/message.interface';
 
 @Injectable()
@@ -16,13 +16,9 @@ export class MessagesEffects {
   addMessage$ = createEffect(
     () => this._actions$.pipe(
       ofType(addMessage),
-      withLatestFrom(this._store.select(selectMessageState)),
-      filter(([action, state]) => {
-        if (!state.request) {
-          return true;
-        } else {
-          return !!state.request.messages ? state.request.messages?.length <= 6 : true;
-        }
+      withLatestFrom(this._store.select(selectMessages)),
+      filter(([action, messages]) => {
+        return messages.length <= 6;
       }),
       switchMap(([action]) => this._openAiHttpService.getOpenAiResponse(action.requestBody).pipe(
         map(response => addMessageSuccess({ response })),

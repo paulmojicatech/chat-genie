@@ -1,9 +1,9 @@
 import { NgClass } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, ElementRef, inject, ViewChild, viewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { v4 } from 'uuid';
 import { OpenAIHttpPostRequest } from './model/message.interface';
-import { addMessage } from './ngrx/actions/messages.action';
+import { addMessage, resetMessages } from './ngrx/actions/messages.action';
 import { selectMessages, selectRequest } from './ngrx/selector/messages.selector';
 
 @Component({
@@ -26,7 +26,7 @@ import { selectMessages, selectRequest } from './ngrx/selector/messages.selector
         <div class="action-container">
           <input #messageInput type="text" placeholder="Enter your message"/>
           <button [disabled]="isSendDisabled()" class="primary" (click)="addMessage(messageInput.value)">Send</button>
-          <button class="default">Reset</button>
+          <button class="default" (click)="resetQuestions()">Reset</button>
         </div>
       </footer>
     </section>
@@ -108,9 +108,13 @@ import { selectMessages, selectRequest } from './ngrx/selector/messages.selector
   `
 })
 export class AppComponent {
+
+  @ViewChild('messageInput') messageInput!: ElementRef<HTMLInputElement>;
+
   private _store = inject(Store);
 
   messagesS = computed(() => {
+    // TODO: Refactor this as it is a bit convoluted
     const messages = this._store.selectSignal(selectMessages)();
     let userIndex = 0;
     const messagesToShow = messages.map((message) => {
@@ -118,8 +122,10 @@ export class AppComponent {
       if (message.choices?.length) {
         role = message.choices[0].message.role === 'user' ? 'user' : 'openAI';
       }
+      // here we need to get the last user question so we find the first question that has a user role and is larger than our last user index
       const foundUserIndex = message.messages?.findIndex((message, mIndex) => message.role === 'user' && mIndex > userIndex) ?? 0;
       const content = role === 'openAI' ? message.choices?.[0].message.content : message.messages?.[foundUserIndex].content;
+      // here we increment the user index
       if (role === 'user') {
         userIndex++;
       }
@@ -155,5 +161,10 @@ export class AppComponent {
       temperature: 0.7
     };
     this._store.dispatch(addMessage(requestBody));
+    this.messageInput.nativeElement.value = '';
+  }
+
+  resetQuestions(): void {
+    this._store.dispatch(resetMessages());
   }
 }
