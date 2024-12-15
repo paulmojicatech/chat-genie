@@ -14,7 +14,8 @@ export interface OpenAIResponse {
  object?: string;
  created?: Date;
  model: string;
- choices?: {
+ messages?: {role: string; content: string}[];
+ choices: {
   index: number;
   message: {
     content: string;

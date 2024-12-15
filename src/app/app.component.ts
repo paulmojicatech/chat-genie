@@ -1,10 +1,10 @@
 import { NgClass } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, ElementRef, inject, ViewChild, viewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { v4 } from 'uuid';
 import { OpenAIHttpPostRequest } from './model/message.interface';
-import { addMessage } from './ngrx/actions/messages.action';
-import { selectMessages } from './ngrx/selector/messages.selector';
+import { addMessage, resetMessages } from './ngrx/actions/messages.action';
+import { selectMessages, selectRequest } from './ngrx/selector/messages.selector';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +12,9 @@ import { selectMessages } from './ngrx/selector/messages.selector';
   imports: [NgClass],
   template: `
     <section class="full-height">
+      <header>
+        <span>Chat Genie</span>
+      </header>
       <div class="messages-container">
         @for (message of messagesS(); track $index) {
           <div class="messages" [ngClass]="{'user': message.role === 'user', 'openAI': message.role === 'openAI'}">
@@ -22,8 +25,8 @@ import { selectMessages } from './ngrx/selector/messages.selector';
       <footer>
         <div class="action-container">
           <input #messageInput type="text" placeholder="Enter your message"/>
-          <button class="primary" (click)="addMessage(messageInput.value)">Send</button>
-          <button class="default">Reset</button>
+          <button [disabled]="isSendDisabled()" class="primary" (click)="addMessage(messageInput.value)">Send</button>
+          <button class="default" (click)="resetQuestions()">Reset</button>
         </div>
       </footer>
     </section>
@@ -33,6 +36,15 @@ import { selectMessages } from './ngrx/selector/messages.selector';
       height: 100vh;
     }
 
+    header {
+      height: 3rem;
+      background-color: #2563eb;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+    }
 
     button {
       padding: .5rem;
@@ -41,13 +53,25 @@ import { selectMessages } from './ngrx/selector/messages.selector';
       border-radius: 8px;
       color: white;
       border: none;
+
+      &:disabled {
+        opacity: 0.5;
+      }
+      &.primary {
+        background-color: #2563eb;
+      }
+      &.default {
+        background-color: #a8a29e;
+        color: #111827;
+      }
     }
 
     .messages-container {
-      height: calc(100vh - 5rem);
+      height: calc(100vh - 9rem); // header + footer + margin-top
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      margin: 1rem 1rem 0 1rem;
       .messages {
         border-radius: 8px;
         padding: 1.5rem;
@@ -64,15 +88,6 @@ import { selectMessages } from './ngrx/selector/messages.selector';
           background-color: #bbf7d0;
         }
       }
-    }
-
-    button.primary {
-      background-color: #2563eb;
-    }
-
-    button.default {
-      background-color: #a8a29e;
-      color: #111827;
     }
 
     footer {
@@ -93,32 +108,63 @@ import { selectMessages } from './ngrx/selector/messages.selector';
   `
 })
 export class AppComponent {
+
+  @ViewChild('messageInput') messageInput!: ElementRef<HTMLInputElement>;
+
   private _store = inject(Store);
 
   messagesS = computed(() => {
+    // TODO: Refactor this as it is a bit convoluted
     const messages = this._store.selectSignal(selectMessages)();
-    const messagesToShow = messages.map(message => {
+    let userIndex = 0;
+    const messagesToShow = messages.map((message) => {
       let role = 'user';
       if (message.choices?.length) {
         role = message.choices[0].message.role === 'user' ? 'user' : 'openAI';
       }
-      const content = message.choices?.[0].message.content;
+      // here we need to get the last user question so we find the first question that has a user role and is larger than our last user index
+      const foundUserIndex = message.messages?.findIndex((message, mIndex) => message.role === 'user' && mIndex > userIndex) ?? 0;
+      const content = role === 'openAI' ? message.choices?.[0].message.content : message.messages?.[foundUserIndex].content;
+      // here we increment the user index
+      if (role === 'user') {
+        userIndex++;
+      }
       return { role, content };
     }).flat();
     if (messages.some(message => message.isProcessing)) {
       messagesToShow.push({ role: 'openAI', content: '...' });
     }
     return messagesToShow;
-  })
+  });
+
+  isSendDisabled = computed(() => {
+    const messages = this._store.selectSignal(selectMessages)();
+    return messages.some(message => message.isProcessing) || messages.length > 6;
+  });
 
   addMessage(message: string) {
+    const storeRequest = this._store.selectSignal(selectRequest)();
+    let messages: {
+      role: string;
+      content: string;
+    }[] = [];
+    if (!storeRequest) {
+      messages = [{ role: 'system', content: 'You are a helpful assistant.' }, { role: 'user', content: message }]
+    } else {
+      messages = [...storeRequest.messages, { role: 'user', content: message }];
 
+    }
     const requestBody: OpenAIHttpPostRequest = {
       appId: v4(),
       model: 'gpt-3.5-turbo',
-      messages: [{ role: 'system', content: 'You are a helpful assistant.' }, { role: 'user', content: message }],
+      messages,
       temperature: 0.7
     };
     this._store.dispatch(addMessage(requestBody));
+    this.messageInput.nativeElement.value = '';
+  }
+
+  resetQuestions(): void {
+    this._store.dispatch(resetMessages());
   }
 }
