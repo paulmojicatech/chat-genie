@@ -1,4 +1,5 @@
 export interface OpenAIHttpPostRequest {
+  appId?: string;
   model: string;
   messages: {
     role: string;
@@ -8,19 +9,20 @@ export interface OpenAIHttpPostRequest {
 }
 
 export interface OpenAIResponse {
- id: string;
- object: string;
- created: Date;
+ appId?: string;
+ id?: string;
+ object?: string;
+ created?: Date;
  model: string;
- choices: {
+ choices?: {
   index: number;
   message: {
     content: string;
     role: string;
   },
-  logprobs: string;
- }[]; 
- usage: OpenAIUsage;
+  logprobs?: string;
+ }[];
+ usage?: OpenAIUsage;
 }
 
 export interface OpenAIUsage {
