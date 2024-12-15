@@ -1,11 +1,13 @@
 import { createReducer, on } from '@ngrx/store';
-import { OpenAIResponse } from '../../model/message.interface';
+import { OpenAIHttpPostRequest, OpenAIResponse } from '../../model/message.interface';
 import { addMessage, addMessageSuccess } from '../actions/messages.action';
 export interface MessageState {
+  request: OpenAIHttpPostRequest | undefined;
   messages: (OpenAIResponse & {isProcessing: boolean} )[];
 }
 
 export const initialState: MessageState = {
+  request: undefined,
   messages: []
 };
 
@@ -17,6 +19,7 @@ export const messageReducer = createReducer(
       const newMessage: OpenAIResponse & {isProcessing: boolean} = {
         ...requestBody,
         id: undefined,
+        model: requestBody.model,
         choices: [
           {
             index: 0,
@@ -30,7 +33,8 @@ export const messageReducer = createReducer(
       };
       return {
         ...state,
-        messages: [...state.messages, newMessage]
+        messages: [...state.messages, newMessage],
+        request: requestBody
       }
     }
   ),

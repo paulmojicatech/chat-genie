@@ -7,3 +7,8 @@ export const selectMessages = createSelector(
   selectMessageState,
   (state: MessageState) => state.messages
 );
+
+export const selectRequest = createSelector(
+  selectMessageState,
+  (state: MessageState) => state.request
+);
