@@ -1,4 +1,4 @@
-# Integreate OpenAI Inside of Angular App
+# Integrate OpenAI Inside of Angular App
 
 ## Overview
 Generative AI is all the rage today.  It seems we can't go a day without hearing about AI, especially in the tech industry.  OpenAI is a big reason why.  OpenAI provides an API to leverage their trained models.  One of the most popular access they provide is access to their LLMs (large language models).
