@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, computed, ElementRef, inject, ViewChild, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { v4 } from 'uuid';
 import { OpenAIHttpPostRequest } from './model/message.interface';
