@@ -3,7 +3,7 @@ import { OpenAIHttpPostRequest, OpenAIResponse } from '../../model/message.inter
 import { addMessage, addMessageSuccess, resetMessages } from '../actions/messages.action';
 export interface MessageState {
   request: OpenAIHttpPostRequest | undefined;
-  messages: (OpenAIResponse & {isProcessing: boolean} )[];
+  messages: {appId?: string, role: string, content: string, isProcessing: boolean}[];
 }
 
 export const initialState: MessageState = {
@@ -16,24 +16,15 @@ export const messageReducer = createReducer(
   on(
     addMessage,
     (state, { requestBody }) => {
-      const newMessage: OpenAIResponse & {isProcessing: boolean} = {
-        ...requestBody,
-        id: undefined,
-        model: requestBody.model,
-        choices: [
-          {
-            index: 0,
-            message: {
-              role: requestBody.messages[1].role,
-              content: requestBody.messages[1].content
-            }
-          }
-        ],
-        isProcessing: true
+      const lastQuestionIndex = requestBody.messages.length - 1;
+      const newMessage: {role: string, content: string, isProcessing: boolean} = {
+        role: requestBody.messages[lastQuestionIndex].role,
+        content: requestBody.messages[lastQuestionIndex].content,
+        isProcessing: false
       };
       return {
         ...state,
-        messages: [...state.messages, newMessage],
+        messages: [...state.messages, newMessage, {appId: requestBody.appId!, role: 'openAI', content: '...', isProcessing: true}],
         request: requestBody
       }
     }
@@ -41,13 +32,15 @@ export const messageReducer = createReducer(
   on(
     addMessageSuccess,
     (state, { response }) => {
-      const foundIndex = state.messages.findIndex(message => message.appId === response.appId);
-      const updatedMessages = structuredClone(state.messages);
-      updatedMessages[foundIndex] = {
-        ...updatedMessages[foundIndex],
+      const foundQuestionIndex = state.messages.findIndex((message) => message.appId === response.appId);
+      const newMessage: {appId: string, role: string, content: string, isProcessing: boolean} = {
+        appId: response.appId!,
+        role: 'openAI',
+        content: response.choices[0].message.content,
         isProcessing: false
       };
-      updatedMessages.push({...response, isProcessing: false});
+      const updatedMessages = structuredClone(state.messages);
+      updatedMessages[foundQuestionIndex] = newMessage;
       return {
         ...state,
         messages: updatedMessages

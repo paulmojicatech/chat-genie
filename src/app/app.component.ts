@@ -113,29 +113,7 @@ export class AppComponent {
 
   private _store = inject(Store);
 
-  messagesS = computed(() => {
-    // TODO: Refactor this as it is a bit convoluted
-    const messages = this._store.selectSignal(selectMessages)();
-    let userIndex = 0;
-    const messagesToShow = messages.map((message) => {
-      let role = 'user';
-      if (message.choices?.length) {
-        role = message.choices[0].message.role === 'user' ? 'user' : 'openAI';
-      }
-      // here we need to get the last user question so we find the first question that has a user role and is larger than our last user index
-      const foundUserIndex = message.messages?.findIndex((message, mIndex) => message.role === 'user' && mIndex > userIndex) ?? 0;
-      const content = role === 'openAI' ? message.choices?.[0].message.content : message.messages?.[foundUserIndex].content;
-      // here we increment the user index
-      if (role === 'user') {
-        userIndex++;
-      }
-      return { role, content };
-    }).flat();
-    if (messages.some(message => message.isProcessing)) {
-      messagesToShow.push({ role: 'openAI', content: '...' });
-    }
-    return messagesToShow;
-  });
+  messagesS = this._store.selectSignal(selectMessages);
 
   isSendDisabled = computed(() => {
     const messages = this._store.selectSignal(selectMessages)();
